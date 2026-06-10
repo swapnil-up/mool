@@ -4,6 +4,19 @@
 **Targets:** Android, iOS  
 **License:** MIT
 
+## Quick Run
+
+```bash
+# Build APK
+./gradlew :app:android:assembleDebug
+
+# Install on connected device
+adb install -r app/android/build/outputs/apk/debug/android-debug.apk
+
+# Desktop (if added)
+./gradlew :app:desktop:run
+```
+
 ## Architecture
 
 ```

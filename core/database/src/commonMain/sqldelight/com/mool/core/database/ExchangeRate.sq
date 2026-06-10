@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS exchange_rates (
+    from_currency TEXT NOT NULL,
+    to_currency TEXT NOT NULL,
+    rate REAL NOT NULL,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (from_currency, to_currency)
+);
+
+getRate:
+SELECT * FROM exchange_rates WHERE from_currency = ? AND to_currency = ?;
+
+getAllRates:
+SELECT * FROM exchange_rates;
+
+upsertRate:
+INSERT OR REPLACE INTO exchange_rates (from_currency, to_currency, rate, updated_at)
+VALUES (?, ?, ?, ?);
+
+deleteOlderThan:
+DELETE FROM exchange_rates WHERE updated_at < ?;

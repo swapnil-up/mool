@@ -27,15 +27,15 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.core.domain)
-            implementation(projects.core.network)
-            implementation(projects.core.database)
-            implementation(projects.core.security)
-            implementation(projects.core.ui)
-            implementation(projects.feature.dashboard)
-            implementation(projects.feature.transactions)
-            implementation(projects.feature.remittance)
-            implementation(projects.feature.settings)
+            api(projects.core.domain)
+            api(projects.core.network)
+            api(projects.core.database)
+            api(projects.core.security)
+            api(projects.core.ui)
+            api(projects.feature.dashboard)
+            api(projects.feature.transactions)
+            api(projects.feature.remittance)
+            api(projects.feature.settings)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

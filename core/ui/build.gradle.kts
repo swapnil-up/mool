@@ -17,11 +17,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.foundation)
-            implementation(libs.compose.material3)
-            implementation(libs.compose.ui)
-            implementation(libs.compose.components.resources)
+            api(libs.compose.runtime)
+            api(libs.compose.foundation)
+            api(libs.compose.material3)
+            api(libs.compose.ui)
+            api(libs.compose.components.resources)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

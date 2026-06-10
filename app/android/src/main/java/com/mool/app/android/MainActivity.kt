@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.mool.App
 import com.mool.core.ui.MoolTheme
 
 class MainActivity : ComponentActivity() {
