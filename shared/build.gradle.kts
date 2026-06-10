@@ -36,6 +36,7 @@ kotlin {
             api(projects.feature.transactions)
             api(projects.feature.remittance)
             api(projects.feature.settings)
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

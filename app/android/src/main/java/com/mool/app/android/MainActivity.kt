@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.mool.App
+import com.mool.core.database.DatabaseDriverFactory
 import com.mool.core.ui.MoolTheme
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +14,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MoolTheme {
-                App()
+                App(DatabaseDriverFactory(this))
             }
         }
     }
