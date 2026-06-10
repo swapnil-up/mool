@@ -1,25 +1,25 @@
-package com.mool.core.database
+package com.mool.core.data
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.mool.core.database.Exchange_rates
+import com.mool.core.database.MoolDatabase
 import com.mool.core.domain.ExchangeRate
 import com.mool.core.domain.repository.ExchangeRateRepository
 import com.mool.core.network.FxApiClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class ExchangeRateRepositoryImpl(
     private val apiClient: FxApiClient,
-    db: MoolDatabase? = null,
+    db: MoolDatabase,
 ) : ExchangeRateRepository {
 
-    private val queries = db?.exchangeRateQueries
+    private val queries = db.exchangeRateQueries
 
     override fun observeRates(): Flow<List<ExchangeRate>> {
-        if (queries == null) return emptyFlow()
         return queries.getAllRates()
             .asFlow()
             .mapToList(Dispatchers.Default)
@@ -28,17 +28,15 @@ class ExchangeRateRepositoryImpl(
 
     override suspend fun refreshRates() {
         val response = apiClient.fetchRates("USD")
-        if (queries != null) {
-            withContext(Dispatchers.Default) {
-                queries.transaction {
-                    response.rates.forEach { (currency, rate) ->
-                        queries.upsertRate(
-                            from_currency = "USD",
-                            to_currency = currency,
-                            rate = rate,
-                            updated_at = response.timeLastUpdateUnix,
-                        )
-                    }
+        withContext(Dispatchers.Default) {
+            queries.transaction {
+                response.rates.forEach { (currency, rate) ->
+                    queries.upsertRate(
+                        from_currency = "USD",
+                        to_currency = currency,
+                        rate = rate,
+                        updated_at = response.timeLastUpdateUnix,
+                    )
                 }
             }
         }

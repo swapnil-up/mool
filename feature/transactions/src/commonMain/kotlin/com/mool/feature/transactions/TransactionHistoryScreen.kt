@@ -12,6 +12,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mool.core.domain.Transaction
 import com.mool.core.domain.TransactionType
+import com.mool.core.ui.ErrorBanner
+import com.mool.core.ui.toFixed
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -44,18 +46,7 @@ fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel) {
 
         Spacer(Modifier.height(8.dp))
 
-        if (state.error != null) {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-            ) {
-                Text(
-                    text = state.error!!,
-                    modifier = Modifier.padding(12.dp),
-                    color = MaterialTheme.colorScheme.onErrorContainer,
-                )
-            }
-        }
+        ErrorBanner(state.error, modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp))
 
         if (state.transactions.isEmpty() && !state.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -118,7 +109,7 @@ private fun TransactionCard(transaction: Transaction, onDelete: () -> Unit) {
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "$prefix${String.format("%.2f", transaction.amount)}",
+                    text = "$prefix${transaction.amount.toFixed(2)}",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     color = amountColor,
@@ -131,3 +122,5 @@ private fun TransactionCard(transaction: Transaction, onDelete: () -> Unit) {
         }
     }
 }
+
+

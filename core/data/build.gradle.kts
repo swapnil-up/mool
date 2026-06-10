@@ -1,22 +1,13 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
-    alias(libs.plugins.sqldelight)
-}
-
-sqldelight {
-    databases {
-        create("MoolDatabase") {
-            packageName.set("com.mool.core.database")
-        }
-    }
 }
 
 kotlin {
-    listOf(iosArm64(), iosSimulatorArm64()).forEach { it.binaries.framework { baseName = "CoreDatabase"; isStatic = true } }
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { it.binaries.framework { baseName = "CoreData"; isStatic = true } }
 
     androidLibrary {
-        namespace = "com.mool.core.database"
+        namespace = "com.mool.core.data"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11 }
@@ -24,16 +15,12 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(libs.kotlinx.coroutines.core)
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines)
-            implementation(libs.kotlinx.coroutines.core)
             implementation(projects.core.domain)
-        }
-        androidMain.dependencies {
-            implementation(libs.sqldelight.android.driver)
-        }
-        iosMain.dependencies {
-            implementation(libs.sqldelight.native.driver)
+            implementation(projects.core.database)
+            implementation(projects.core.network)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

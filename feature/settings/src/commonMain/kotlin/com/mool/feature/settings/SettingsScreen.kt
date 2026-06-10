@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mool.core.ui.ErrorBanner
 import kotlinx.coroutines.flow.collectLatest
 
 private val CURRENCIES = listOf(
@@ -70,19 +71,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             }
         }
 
-        if (state.error != null) {
-            Spacer(Modifier.height(8.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-            ) {
-                Text(
-                    text = state.error!!,
-                    modifier = Modifier.padding(12.dp),
-                    color = MaterialTheme.colorScheme.onErrorContainer,
-                )
-            }
-        }
+        ErrorBanner(state.error, modifier = Modifier.fillMaxWidth())
     }
 }
 

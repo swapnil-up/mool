@@ -16,5 +16,3 @@ upsertRate:
 INSERT OR REPLACE INTO exchange_rates (from_currency, to_currency, rate, updated_at)
 VALUES (?, ?, ?, ?);
 
-deleteOlderThan:
-DELETE FROM exchange_rates WHERE updated_at < ?;

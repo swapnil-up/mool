@@ -30,18 +30,24 @@ Mool follows **Clean Architecture** with 3 explicit layers, **MVI** state manage
                  │              │
          ┌───────▼──────────────▼───────┐
          │         :core:domain          │
-         │  (Models, Repository IFaces,  │
-         │   UseCases — no dependencies) │
-         └───────┬──────────────┬───────┘
-                 │              │
-         ┌───────▼─────┐  ┌────▼────────┐
-         │:core:network │  │:core:database│
-         │(Ktor client, │  │(SQLDelight   │
-         │ API models)  │  │ queries,     │
-         │              │  │ Repository   │
-         │              │  │ Impls)       │
-         └─────────────┘  └─────────────┘
-
+          │  (Models, Repository IFaces,  │
+          │   UseCases — no dependencies) │
+          └───────┬──────────────┬───────┘
+                  │              │
+          ┌───────▼──────────────▼───────┐
+          │         :core:data             │
+          │  (Repository Impls that need   │
+          │   network + database together) │
+          └───────┬──────────────┬───────┘
+                  │              │
+          ┌───────▼─────┐  ┌────▼────────┐
+          │:core:network │  │:core:database│
+          │(Ktor client, │  │(SQLDelight   │
+          │ API models)  │  │ queries,     │
+          │              │  │ Repository   │
+          │              │  │ Impls)       │
+          └─────────────┘  └─────────────┘
+          
 :core:security  (Biometric gate, encryption — expect/actual)
 :core:ui        (Shared theme, reusable composables)
 ```
@@ -52,11 +58,12 @@ Mool follows **Clean Architecture** with 3 explicit layers, **MVI** state manage
 
 | Module | Responsibility | Key Dependencies |
 |---|---|---|
-| `:core:domain` | Pure Kotlin models (`Transaction`, `ExchangeRate`), repository interfaces, use cases | None |
+| `:core:domain` | Pure Kotlin models (`Transaction`, `ExchangeRate`), repository interfaces, `Clock` interface, use cases | None |
+| `:core:data` | Repository impls that coordinate multiple data sources (`ExchangeRateRepositoryImpl`) | `:core:database`, `:core:network` |
 | `:core:network` | Ktor `HttpClient` factory, typed API client (`FxApiClient`), serializable response models | Ktor, kotlinx-serialization |
-| `:core:database` | SQLDelight `.sq` files (3 tables), `RepositoryImpl` classes that implement `:core:domain` interfaces | SQLDelight, Ktor (for API calls in `ExchangeRateRepositoryImpl`) |
+ | `:core:database` | SQLDelight `.sq` files (3 tables), pure-database `RepositoryImpl` classes (`TransactionRepositoryImpl`, `SettingsRepositoryImpl`), `SystemClock` (implements `:core:domain`'s `Clock`) | SQLDelight |
 | `:core:security` | `expect`/`actual` declarations for biometric auth, encryption, cert pinning | Platform-specific SDKs |
-| `:core:ui` | `MoolTheme` (Material3 light/dark color schemes), shared composables | Compose Multiplatform |
+| `:core:ui` | `MoolTheme` (Material3 light/dark color schemes), `ErrorBanner`, canvas nav icons, `Double.toFixed()` formatting utility | Compose Multiplatform |
 | `:feature:dashboard` | MVI: `DashboardState`, `DashboardIntent`, `DashboardEffect`, `DashboardViewModel`, `DashboardScreen` | `:core:domain`, `:core:database` |
 | `:feature:transactions` | MVI: form + history screens | `:core:domain`, `:core:database` |
 | `:feature:remittance` | MVI: remittance calculator (stub) | `:core:domain` |

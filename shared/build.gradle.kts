@@ -30,6 +30,7 @@ kotlin {
             api(projects.core.domain)
             api(projects.core.network)
             api(projects.core.database)
+            api(projects.core.data)
             api(projects.core.security)
             api(projects.core.ui)
             api(projects.feature.dashboard)

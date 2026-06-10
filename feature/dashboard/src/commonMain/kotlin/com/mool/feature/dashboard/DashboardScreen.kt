@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mool.core.domain.ExchangeRate
+import com.mool.core.ui.ErrorBanner
+import com.mool.core.ui.toFixed
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -42,7 +44,7 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
                 Text(
-                    text = "${currencySymbol(state.preferredCurrency)}${String.format("%.2f", state.balance)}",
+                    text = "${currencySymbol(state.preferredCurrency)}${state.balance.toFixed(2)}",
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -69,18 +71,7 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
 
         Spacer(Modifier.height(8.dp))
 
-        if (state.error != null) {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-            ) {
-                Text(
-                    text = state.error!!,
-                    modifier = Modifier.padding(12.dp),
-                    color = MaterialTheme.colorScheme.onErrorContainer,
-                )
-            }
-        }
+        ErrorBanner(state.error, modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp))
 
         Spacer(Modifier.height(8.dp))
 
@@ -115,7 +106,7 @@ private fun RateRow(rate: ExchangeRate) {
         ) {
             Text(rate.toCurrency, style = MaterialTheme.typography.bodyLarge)
             Text(
-                text = String.format("%.4f", rate.rate),
+                text = rate.rate.toFixed(4),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
             )
@@ -131,3 +122,5 @@ private fun currencySymbol(code: String): String = when (code) {
     "INR", "NPR" -> "\u20B9"
     else -> "$code "
 }
+
+

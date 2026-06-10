@@ -9,18 +9,16 @@ import com.mool.core.domain.TransactionType
 import com.mool.core.domain.repository.TransactionRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class TransactionRepositoryImpl(
-    db: MoolDatabase? = null,
+    db: MoolDatabase,
 ) : TransactionRepository {
 
-    private val queries = db?.transactionQueries
+    private val queries = db.transactionQueries
 
     override fun observeTransactions(): Flow<List<Transaction>> {
-        if (queries == null) return emptyFlow()
         return queries.getAll()
             .asFlow()
             .mapToList(Dispatchers.Default)
@@ -28,7 +26,6 @@ class TransactionRepositoryImpl(
     }
 
     override fun observeBalance(): Flow<Double> {
-        if (queries == null) return emptyFlow()
         return queries.getBalance()
             .asFlow()
             .mapToOne(Dispatchers.Default)
@@ -36,7 +33,6 @@ class TransactionRepositoryImpl(
     }
 
     override suspend fun addTransaction(transaction: Transaction) {
-        if (queries == null) return
         withContext(Dispatchers.Default) {
             queries.insert(
                 amount = transaction.amount,
@@ -50,7 +46,6 @@ class TransactionRepositoryImpl(
     }
 
     override suspend fun deleteTransaction(id: Long) {
-        if (queries == null) return
         withContext(Dispatchers.Default) {
             queries.deleteById(id)
         }

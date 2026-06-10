@@ -1,6 +1,7 @@
 package com.mool.feature.transactions
 
 import com.mool.core.domain.Transaction
+import com.mool.core.domain.clock.Clock
 import com.mool.core.domain.repository.TransactionRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,10 +13,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 
 class TransactionFormViewModel(
     private val repository: TransactionRepository,
+    private val clock: Clock,
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -60,7 +61,7 @@ class TransactionFormViewModel(
                         description = s.description,
                         type = s.type,
                         category = s.category,
-                        timestamp = Clock.System.now().toEpochMilliseconds(),
+                        timestamp = clock.now(),
                     )
                 )
                 _state.update { it.copy(isSubmitting = false) }

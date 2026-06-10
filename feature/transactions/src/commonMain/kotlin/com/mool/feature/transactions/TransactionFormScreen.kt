@@ -12,6 +12,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mool.core.domain.TransactionType
+import com.mool.core.ui.ErrorBanner
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -87,18 +88,7 @@ fun TransactionFormScreen(viewModel: TransactionFormViewModel, onSaved: () -> Un
         )
         Spacer(Modifier.height(20.dp))
 
-        if (state.error != null) {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-            ) {
-                Text(
-                    text = state.error!!,
-                    modifier = Modifier.padding(12.dp),
-                    color = MaterialTheme.colorScheme.onErrorContainer,
-                )
-            }
-        }
+        ErrorBanner(state.error, modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp))
 
         Button(
             onClick = { viewModel.accept(TransactionFormIntent.Submit) },
