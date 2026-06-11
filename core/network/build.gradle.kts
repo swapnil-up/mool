@@ -23,6 +23,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(projects.core.domain)
+
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)

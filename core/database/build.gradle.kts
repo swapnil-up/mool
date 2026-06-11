@@ -29,9 +29,11 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(projects.core.domain)
             implementation(projects.core.security)
+            implementation(libs.koin.core)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.android.driver)
+            implementation(libs.koin.android)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native.driver)

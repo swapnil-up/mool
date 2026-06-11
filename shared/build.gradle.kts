@@ -38,9 +38,14 @@ kotlin {
             api(projects.feature.remittance)
             api(projects.feature.settings)
 
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
         }
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
+            implementation(libs.koin.android)
+        }
+        iosMain.dependencies {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

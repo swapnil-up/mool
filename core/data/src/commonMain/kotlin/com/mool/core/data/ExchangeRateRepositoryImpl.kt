@@ -11,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-
 class ExchangeRateRepositoryImpl(
     private val apiClient: FxApiClient,
     db: MoolDatabase,

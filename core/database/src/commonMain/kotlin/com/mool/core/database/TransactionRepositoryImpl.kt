@@ -12,7 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-
 class TransactionRepositoryImpl(
     db: MoolDatabase,
     private val encryptionManager: EncryptionManager,

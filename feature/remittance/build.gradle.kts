@@ -20,6 +20,7 @@ kotlin {
             implementation(projects.core.ui)
             implementation(projects.core.domain)
             implementation(libs.kotlinx.coroutines.core)
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

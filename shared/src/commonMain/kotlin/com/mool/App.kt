@@ -14,17 +14,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.mool.core.database.DatabaseDriverFactory
-import com.mool.core.database.MoolDatabase
-import com.mool.core.database.SettingsRepositoryImpl
-import com.mool.core.database.SystemClock
-import com.mool.core.database.TransactionRepositoryImpl
-import com.mool.core.data.ExchangeRateRepositoryImpl
 import com.mool.core.domain.SettingsKeys
-import com.mool.core.network.FxApiClient
-import com.mool.core.network.MoolHttpClient
+import com.mool.core.domain.clock.Clock
+import com.mool.core.domain.repository.ExchangeRateRepository
+import com.mool.core.domain.repository.SettingsRepository
+import com.mool.core.domain.repository.TransactionRepository
 import com.mool.core.security.BiometricLock
-import com.mool.core.security.EncryptionManager
 import com.mool.core.security.isBiometricAuthenticationAvailable
 import com.mool.core.ui.AddIcon
 import com.mool.core.ui.DashboardIcon
@@ -42,6 +37,7 @@ import com.mool.feature.transactions.TransactionFormScreen
 import com.mool.feature.transactions.TransactionFormViewModel
 import com.mool.feature.transactions.TransactionHistoryScreen
 import com.mool.feature.transactions.TransactionHistoryViewModel
+import org.koin.compose.koinInject
 
 private enum class Tab(val label: String) {
     DASHBOARD("Dashboard"),
@@ -52,21 +48,34 @@ private enum class Tab(val label: String) {
 }
 
 @Composable
-fun App(databaseDriverFactory: DatabaseDriverFactory) {
-    val httpClient = remember { MoolHttpClient.create() }
-    val fxApiClient = remember { FxApiClient(httpClient) }
-    val database = remember { MoolDatabase(databaseDriverFactory.createDriver()) }
-    val clock = remember { SystemClock() }
-    val exchangeRepo = remember { ExchangeRateRepositoryImpl(fxApiClient, database) }
-    val encryptionManager = remember { EncryptionManager() }
-    val transactionRepo = remember { TransactionRepositoryImpl(database, encryptionManager) }
-    val settingsRepo = remember { SettingsRepositoryImpl(database) }
-    val dashboardVm = remember { DashboardViewModel(exchangeRepo, transactionRepo, settingsRepo) }
-    val transactionVm = remember { TransactionFormViewModel(transactionRepo, clock) }
-    val historyVm = remember { TransactionHistoryViewModel(transactionRepo) }
+fun App() {
+    AppContent()
+}
+
+@Composable
+private fun AppContent() {
+    val exchangeRateRepo = koinInject<ExchangeRateRepository>()
+    val transactionRepo = koinInject<TransactionRepository>()
+    val settingsRepo = koinInject<SettingsRepository>()
+    val clock = koinInject<Clock>()
+
+    val dashboardVm = remember {
+        DashboardViewModel(exchangeRateRepo, transactionRepo, settingsRepo)
+    }
+    val transactionVm = remember {
+        TransactionFormViewModel(transactionRepo, clock)
+    }
+    val historyVm = remember {
+        TransactionHistoryViewModel(transactionRepo)
+    }
+    val remittanceVm = remember {
+        RemittanceViewModel(exchangeRateRepo)
+    }
+
     val biometricAvailable = isBiometricAuthenticationAvailable()
-    val settingsVm = remember { SettingsViewModel(settingsRepo, biometricAvailable) }
-    val remittanceVm = remember { RemittanceViewModel(exchangeRepo) }
+    val settingsVm = remember {
+        SettingsViewModel(settingsRepo, biometricAvailable)
+    }
 
     var biometricEnabled by remember { mutableStateOf(false) }
     var biometricLoaded by remember { mutableStateOf(false) }
