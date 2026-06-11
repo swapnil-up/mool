@@ -3,6 +3,7 @@ package com.mool.feature.settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -68,6 +69,36 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                         onSelect = { viewModel.accept(SettingsIntent.SetCurrency(it)) },
                     )
                 }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Biometric Lock",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        if (state.isBiometricAvailable) "Require biometrics to open the app"
+                        else "Biometrics not available on this device",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = state.biometricEnabled,
+                    onCheckedChange = { viewModel.accept(SettingsIntent.SetBiometricLock(it)) },
+                    enabled = state.isBiometricAvailable,
+                )
             }
         }
 

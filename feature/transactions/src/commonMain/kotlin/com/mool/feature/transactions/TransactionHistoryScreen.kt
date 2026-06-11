@@ -3,11 +3,14 @@ package com.mool.feature.transactions
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mool.core.domain.Transaction
@@ -46,12 +49,54 @@ fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel) {
 
         Spacer(Modifier.height(8.dp))
 
+        OutlinedTextField(
+            value = state.searchQuery,
+            onValueChange = { viewModel.accept(TransactionHistoryIntent.SetSearchQuery(it)) },
+            placeholder = { Text("Search transactions...") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = {
+                viewModel.accept(TransactionHistoryIntent.SetSearchQuery(state.searchQuery))
+            }),
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = state.filterType == null,
+                onClick = { viewModel.accept(TransactionHistoryIntent.SetFilterType(null)) },
+                label = { Text("All") },
+            )
+            FilterChip(
+                selected = state.filterType == TransactionType.INCOME,
+                onClick = { viewModel.accept(TransactionHistoryIntent.SetFilterType(TransactionType.INCOME)) },
+                label = { Text("Income") },
+            )
+            FilterChip(
+                selected = state.filterType == TransactionType.EXPENSE,
+                onClick = { viewModel.accept(TransactionHistoryIntent.SetFilterType(TransactionType.EXPENSE)) },
+                label = { Text("Expense") },
+            )
+        }
+
+        Spacer(Modifier.height(8.dp))
+
         ErrorBanner(state.error, modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp))
 
-        if (state.transactions.isEmpty() && !state.isLoading) {
+        if (state.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (state.transactions.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                val msg = if (state.searchQuery.isNotEmpty() || state.filterType != null)
+                    "No matching transactions"
+                else
+                    "No transactions yet"
                 Text(
-                    "No transactions yet",
+                    msg,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

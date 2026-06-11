@@ -7,6 +7,7 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.mool.core.domain.Transaction
 import com.mool.core.domain.TransactionType
 import com.mool.core.domain.repository.TransactionRepository
+import com.mool.core.security.EncryptionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -14,6 +15,7 @@ import kotlinx.coroutines.withContext
 
 class TransactionRepositoryImpl(
     db: MoolDatabase,
+    private val encryptionManager: EncryptionManager,
 ) : TransactionRepository {
 
     private val queries = db.transactionQueries
@@ -37,9 +39,9 @@ class TransactionRepositoryImpl(
             queries.insert(
                 amount = transaction.amount,
                 currency = transaction.currency,
-                description = transaction.description,
+                description = encrypt(transaction.description),
                 type = transaction.type.name,
-                category = transaction.category,
+                category = encrypt(transaction.category),
                 created_at = transaction.timestamp,
             )
         }
@@ -55,9 +57,23 @@ class TransactionRepositoryImpl(
         id = id,
         amount = amount,
         currency = currency,
-        description = description,
+        description = try { decrypt(description) } catch (_: Exception) { description },
         type = TransactionType.valueOf(type),
-        category = category,
+        category = try { decrypt(category) } catch (_: Exception) { category },
         timestamp = created_at,
     )
+
+    private fun encrypt(plaintext: String): String {
+        if (plaintext.isEmpty()) return ""
+        val ciphertext = encryptionManager.encrypt(plaintext.encodeToByteArray())
+        return ciphertext.joinToString("") { b ->
+            b.toInt().and(0xFF).toString(16).padStart(2, '0')
+        }
+    }
+
+    private fun decrypt(hex: String): String {
+        if (hex.isEmpty()) return ""
+        val bytes = hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        return encryptionManager.decrypt(bytes).decodeToString()
+    }
 }

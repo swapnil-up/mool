@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository,
+    private val isBiometricSupported: Boolean = false,
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -30,17 +31,26 @@ class SettingsViewModel(
 
     fun accept(intent: SettingsIntent) {
         when (intent) {
-            is SettingsIntent.LoadSettings -> observePreference()
+            is SettingsIntent.LoadSettings -> observePreferences()
             is SettingsIntent.SetCurrency -> setCurrency(intent.currency)
+            is SettingsIntent.SetBiometricLock -> setBiometricLock(intent.enabled)
         }
     }
 
-    fun observePreference() {
+    fun observePreferences() {
         observeJob?.cancel()
         observeJob = scope.launch {
             settingsRepository.observeSetting(SettingsKeys.PREFERRED_CURRENCY).collect { value ->
-                _state.update { it.copy(preferredCurrency = value ?: "USD", isLoading = false) }
+                _state.update { it.copy(preferredCurrency = value ?: "USD") }
             }
+        }
+        scope.launch {
+            settingsRepository.observeSetting(SettingsKeys.BIOMETRIC_ENABLED).collect { value ->
+                _state.update { it.copy(biometricEnabled = value == "true", isBiometricAvailable = isBiometricSupported) }
+            }
+        }
+        scope.launch {
+            _state.update { it.copy(isLoading = false) }
         }
     }
 
@@ -50,6 +60,16 @@ class SettingsViewModel(
                 settingsRepository.setSetting(SettingsKeys.PREFERRED_CURRENCY, currency)
             } catch (e: Exception) {
                 _effects.send(SettingsEffect.ShowError(e.message ?: "Failed to save preference"))
+            }
+        }
+    }
+
+    private fun setBiometricLock(enabled: Boolean) {
+        scope.launch {
+            try {
+                settingsRepository.setSetting(SettingsKeys.BIOMETRIC_ENABLED, enabled.toString())
+            } catch (e: Exception) {
+                _effects.send(SettingsEffect.ShowError(e.message ?: "Failed to update biometric setting"))
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.mool.feature.transactions
 
+import com.mool.core.domain.Transaction
 import com.mool.core.domain.repository.TransactionRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +26,7 @@ class TransactionHistoryViewModel(
     private val _effects = Channel<TransactionHistoryEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
+    private var allTransactions: List<Transaction> = emptyList()
     private var observeJob: Job? = null
 
     fun startObserving() {
@@ -33,7 +35,8 @@ class TransactionHistoryViewModel(
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 repository.observeTransactions().collect { transactions ->
-                    _state.update { it.copy(isLoading = false, transactions = transactions) }
+                    allTransactions = transactions
+                    applyFilters()
                 }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = e.message) }
@@ -46,6 +49,14 @@ class TransactionHistoryViewModel(
         when (intent) {
             TransactionHistoryIntent.Refresh -> startObserving()
             is TransactionHistoryIntent.DeleteTransaction -> delete(intent.id)
+            is TransactionHistoryIntent.SetSearchQuery -> {
+                _state.update { it.copy(searchQuery = intent.query) }
+                applyFilters()
+            }
+            is TransactionHistoryIntent.SetFilterType -> {
+                _state.update { it.copy(filterType = intent.type) }
+                applyFilters()
+            }
         }
     }
 
@@ -57,5 +68,19 @@ class TransactionHistoryViewModel(
                 _effects.send(TransactionHistoryEffect.ShowError(e.message ?: "Delete failed"))
             }
         }
+    }
+
+    private fun applyFilters() {
+        val s = _state.value
+        val query = s.searchQuery.trim().lowercase()
+        val type = s.filterType
+        val filtered = allTransactions.filter { tx ->
+            (type == null || tx.type == type) &&
+                (query.isEmpty() ||
+                    tx.description.lowercase().contains(query) ||
+                    tx.category.lowercase().contains(query) ||
+                    tx.currency.lowercase().contains(query))
+        }
+        _state.update { it.copy(isLoading = false, transactions = filtered) }
     }
 }

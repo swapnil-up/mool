@@ -28,6 +28,7 @@ kotlin {
             implementation(libs.sqldelight.coroutines)
             implementation(libs.kotlinx.coroutines.core)
             implementation(projects.core.domain)
+            implementation(projects.core.security)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.android.driver)

@@ -79,3 +79,18 @@ fun SettingsIcon(modifier: Modifier = Modifier.size(24.dp)) {
         drawCircle(Color.Gray, radius = r, center = c, style = Stroke(width = 2f))
     }
 }
+
+@Composable
+fun RemittanceIcon(modifier: Modifier = Modifier.size(24.dp)) {
+    Canvas(modifier = modifier) {
+        val c = Offset(size.width / 2, size.height / 2)
+        val w = size.width
+        val h = size.height
+        drawLine(Color.Gray, Offset(w * 0.2f, h * 0.4f), Offset(w * 0.8f, h * 0.4f), strokeWidth = 2f)
+        drawLine(Color.Gray, Offset(w * 0.8f, h * 0.4f), Offset(w * 0.65f, h * 0.2f), strokeWidth = 2f)
+        drawLine(Color.Gray, Offset(w * 0.8f, h * 0.4f), Offset(w * 0.65f, h * 0.6f), strokeWidth = 2f)
+        drawLine(Color.Gray, Offset(w * 0.2f, h * 0.6f), Offset(w * 0.8f, h * 0.6f), strokeWidth = 2f)
+        drawLine(Color.Gray, Offset(w * 0.2f, h * 0.6f), Offset(w * 0.35f, h * 0.4f), strokeWidth = 2f)
+        drawLine(Color.Gray, Offset(w * 0.2f, h * 0.6f), Offset(w * 0.35f, h * 0.8f), strokeWidth = 2f)
+    }
+}

@@ -20,6 +20,12 @@ class SettingsRepositoryImpl(
             .mapToOneOrNull(Dispatchers.Default)
     }
 
+    override suspend fun getSetting(key: String): String? {
+        return withContext(Dispatchers.Default) {
+            queries.getSetting(key).executeAsOneOrNull()
+        }
+    }
+
     override suspend fun setSetting(key: String, value: String) {
         withContext(Dispatchers.Default) {
             queries.setSetting(key, value)

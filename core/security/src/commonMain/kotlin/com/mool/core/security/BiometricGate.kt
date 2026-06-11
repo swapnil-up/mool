@@ -1,7 +1,5 @@
 package com.mool.core.security
 
-import kotlinx.coroutines.flow.Flow
-
 sealed interface BiometricResult {
     data object Success : BiometricResult
     data class Error(val message: String) : BiometricResult

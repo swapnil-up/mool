@@ -39,6 +39,9 @@ kotlin {
             api(projects.feature.settings)
 
         }
+        androidMain.dependencies {
+            implementation(libs.androidx.activity.compose)
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
