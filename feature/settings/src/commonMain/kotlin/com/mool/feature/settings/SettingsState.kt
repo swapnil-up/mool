@@ -9,4 +9,5 @@ data class SettingsState(
     val themeMode: ThemeMode = ThemeMode.FOLLOW_SYSTEM,
     val isLoading: Boolean = true,
     val error: String? = null,
+    val budgets: Map<String, String> = emptyMap(),
 )

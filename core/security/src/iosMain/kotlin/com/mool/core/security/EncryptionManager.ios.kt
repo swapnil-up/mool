@@ -5,10 +5,10 @@ import platform.Security.*
 
 actual class EncryptionManager {
     actual fun encrypt(plaintext: ByteArray): ByteArray {
-        return plaintext // TODO: implement Keychain-based encryption
+        return plaintext // Stub — Keychain encryption not yet implemented
     }
 
     actual fun decrypt(ciphertext: ByteArray): ByteArray {
-        return ciphertext // TODO: implement Keychain-based decryption
+        return ciphertext // Stub — Keychain decryption not yet implemented
     }
 }

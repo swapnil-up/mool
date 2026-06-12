@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -21,6 +22,7 @@ import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -32,17 +34,22 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mool.core.ui.ErrorBanner
 import com.mool.core.ui.MoolCard
 import com.mool.core.ui.MoolDivider
 import com.mool.core.ui.MoolSectionHeader
 import com.mool.core.ui.ThemeMode
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 private val CURRENCIES = listOf(
     "USD", "EUR", "GBP", "JPY", "CHF", "CAD", "AUD", "NZD",
@@ -184,6 +191,32 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
 
         Spacer(Modifier.height(24.dp))
 
+        // Budgets section
+        MoolSectionHeader(title = "Monthly Budgets")
+        Spacer(Modifier.height(12.dp))
+
+        MoolCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    "Set spending limits per category",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(12.dp))
+                listOf("Food", "Transport", "Shopping", "Bills").forEach { category ->
+                    val amount = state.budgets[category] ?: ""
+                    BudgetAmountField(
+                        label = category,
+                        value = amount,
+                        onValueChange = { viewModel.accept(SettingsIntent.SetBudget(category, it)) },
+                    )
+                    if (category != "Bills") Spacer(Modifier.height(8.dp))
+                }
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
         MoolSectionHeader(title = "About")
         Spacer(Modifier.height(12.dp))
 
@@ -253,5 +286,48 @@ private fun CurrencyDropdown(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun BudgetAmountField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    var localValue by remember { mutableStateOf(value) }
+    var debounceJob by remember { mutableStateOf<Job?>(null) }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        OutlinedTextField(
+            value = localValue,
+            onValueChange = { newVal ->
+                localValue = newVal
+                debounceJob?.cancel()
+                debounceJob = scope.launch {
+                    delay(400)
+                    onValueChange(newVal)
+                }
+            },
+            placeholder = { Text("0") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            singleLine = true,
+            modifier = Modifier.width(120.dp),
+            shape = MaterialTheme.shapes.small,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            ),
+        )
     }
 }

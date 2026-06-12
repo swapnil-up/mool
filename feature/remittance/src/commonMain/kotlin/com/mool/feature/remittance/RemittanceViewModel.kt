@@ -30,7 +30,7 @@ class RemittanceViewModel(
     private var cachedRates: List<ExchangeRate> = emptyList()
 
     fun observeRates() {
-        ratesJob?.cancel()
+        if (ratesJob?.isActive == true) return
         ratesJob = scope.launch {
             _state.update { it.copy(isRatesLoading = true) }
             try {

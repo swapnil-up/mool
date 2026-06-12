@@ -30,12 +30,15 @@ class SettingsViewModel(
 
     private var observeJob: Job? = null
 
+    private val budgetCategories = listOf("Food", "Transport", "Shopping", "Bills")
+
     fun accept(intent: SettingsIntent) {
         when (intent) {
             is SettingsIntent.LoadSettings -> observePreferences()
             is SettingsIntent.SetCurrency -> setCurrency(intent.currency)
             is SettingsIntent.SetBiometricLock -> setBiometricLock(intent.enabled)
             is SettingsIntent.SetThemeMode -> setThemeMode(intent.mode)
+            is SettingsIntent.SetBudget -> setBudget(intent.category, intent.amount)
         }
     }
 
@@ -59,6 +62,16 @@ class SettingsViewModel(
                     else -> ThemeMode.FOLLOW_SYSTEM
                 }
                 _state.update { it.copy(themeMode = mode) }
+            }
+        }
+        budgetCategories.forEach { category ->
+            scope.launch {
+                val key = "budget_${category.lowercase()}"
+                settingsRepository.observeSetting(key).collect { value ->
+                    _state.update { s ->
+                        s.copy(budgets = s.budgets + (category to (value ?: "")))
+                    }
+                }
             }
         }
         scope.launch {
@@ -98,6 +111,24 @@ class SettingsViewModel(
                 _state.update { it.copy(themeMode = mode) }
             } catch (e: Exception) {
                 _effects.send(SettingsEffect.ShowError(e.message ?: "Failed to update theme"))
+            }
+        }
+    }
+
+    private fun setBudget(category: String, amount: String) {
+        scope.launch {
+            try {
+                val key = "budget_${category.lowercase()}"
+                if (amount.isBlank()) {
+                    settingsRepository.setSetting(key, "")
+                } else {
+                    val parsed = amount.toDoubleOrNull()
+                    if (parsed != null && parsed >= 0) {
+                        settingsRepository.setSetting(key, amount)
+                    }
+                }
+            } catch (e: Exception) {
+                _effects.send(SettingsEffect.ShowError(e.message ?: "Failed to save budget"))
             }
         }
     }

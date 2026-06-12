@@ -20,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.IconButton
@@ -27,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,6 +48,7 @@ import com.mool.core.ui.MoolShimmerCard
 import com.mool.core.ui.toFixed
 import kotlinx.coroutines.flow.collectLatest
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel) {
     val state by viewModel.state.collectAsState()
@@ -62,118 +65,126 @@ fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel) {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+    PullToRefreshBox(
+        isRefreshing = state.isLoading,
+        onRefresh = { viewModel.accept(TransactionHistoryIntent.Refresh) },
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text(
-                "Transaction History",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            if (state.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = state.searchQuery,
-            onValueChange = { viewModel.accept(TransactionHistoryIntent.SetSearchQuery(it)) },
-            placeholder = { Text("Search transactions...") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = {
-                viewModel.accept(TransactionHistoryIntent.SetSearchQuery(state.searchQuery))
-            }),
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-            ),
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = state.filterType == null,
-                onClick = { viewModel.accept(TransactionHistoryIntent.SetFilterType(null)) },
-                label = { Text("All") },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-            )
-            FilterChip(
-                selected = state.filterType == TransactionType.INCOME,
-                onClick = { viewModel.accept(TransactionHistoryIntent.SetFilterType(TransactionType.INCOME)) },
-                label = { Text("Income") },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                ),
-            )
-            FilterChip(
-                selected = state.filterType == TransactionType.EXPENSE,
-                onClick = { viewModel.accept(TransactionHistoryIntent.SetFilterType(TransactionType.EXPENSE)) },
-                label = { Text("Expense") },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.errorContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onErrorContainer,
-                ),
-            )
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        ErrorBanner(state.error, modifier = Modifier.fillMaxWidth())
-
-        when {
-            state.isLoading && state.transactions.isEmpty() -> {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Column(Modifier.fillMaxWidth()) {
-                        repeat(5) { MoolShimmerCard(Modifier.padding(vertical = 4.dp)) }
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "Transaction History",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    if (state.isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                     }
                 }
             }
-            state.transactions.isEmpty() -> {
-                val msg = if (state.searchQuery.isNotEmpty() || state.filterType != null)
-                    "No matching transactions"
-                else
-                    "No transactions yet"
-                val subtitle = if (state.searchQuery.isNotEmpty() || state.filterType != null)
-                    "Try a different search or filter"
-                else
-                    "Add your first transaction to get started"
-                Box(modifier = Modifier.fillMaxSize()) {
-                    MoolEmptyState(
-                        title = msg,
-                        subtitle = subtitle,
-                        action = if (state.searchQuery.isEmpty() && state.filterType == null) null
-                        else {
-                            {
-                                Button(
-                                    onClick = {
-                                        viewModel.accept(TransactionHistoryIntent.SetSearchQuery(""))
-                                        viewModel.accept(TransactionHistoryIntent.SetFilterType(null))
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                ) { Text("Clear filters") }
-                            }
-                        },
+
+            item { Spacer(Modifier.height(12.dp)) }
+
+            item {
+                OutlinedTextField(
+                    value = state.searchQuery,
+                    onValueChange = { viewModel.accept(TransactionHistoryIntent.SetSearchQuery(it)) },
+                    placeholder = { Text("Search transactions...") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = {
+                        viewModel.accept(TransactionHistoryIntent.SetSearchQuery(state.searchQuery))
+                    }),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    ),
+                )
+            }
+
+            item { Spacer(Modifier.height(12.dp)) }
+
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = state.filterType == null,
+                        onClick = { viewModel.accept(TransactionHistoryIntent.SetFilterType(null)) },
+                        label = { Text("All") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ),
+                    )
+                    FilterChip(
+                        selected = state.filterType == TransactionType.INCOME,
+                        onClick = { viewModel.accept(TransactionHistoryIntent.SetFilterType(TransactionType.INCOME)) },
+                        label = { Text("Income") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        ),
+                    )
+                    FilterChip(
+                        selected = state.filterType == TransactionType.EXPENSE,
+                        onClick = { viewModel.accept(TransactionHistoryIntent.SetFilterType(TransactionType.EXPENSE)) },
+                        label = { Text("Expense") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.errorContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onErrorContainer,
+                        ),
                     )
                 }
             }
-            else -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
+
+            item { Spacer(Modifier.height(12.dp)) }
+
+            item {
+                ErrorBanner(state.error, modifier = Modifier.fillMaxWidth())
+            }
+
+            when {
+                state.isLoading && state.transactions.isEmpty() -> {
+                    items(5) { MoolShimmerCard(Modifier.padding(vertical = 4.dp)) }
+                }
+                state.transactions.isEmpty() -> {
+                    item {
+                        val msg = if (state.searchQuery.isNotEmpty() || state.filterType != null)
+                            "No matching transactions"
+                        else
+                            "No transactions yet"
+                        val subtitle = if (state.searchQuery.isNotEmpty() || state.filterType != null)
+                            "Try a different search or filter"
+                        else
+                            "Add your first transaction to get started"
+                        MoolEmptyState(
+                            title = msg,
+                            subtitle = subtitle,
+                            action = if (state.searchQuery.isEmpty() && state.filterType == null) null
+                            else {
+                                {
+                                    Button(
+                                        onClick = {
+                                            viewModel.accept(TransactionHistoryIntent.SetSearchQuery(""))
+                                            viewModel.accept(TransactionHistoryIntent.SetFilterType(null))
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                    ) { Text("Clear filters") }
+                                }
+                            },
+                        )
+                    }
+                }
+                else -> {
                     items(state.transactions, key = { it.id }) { tx ->
                         TransactionCard(
                             transaction = tx,
@@ -203,7 +214,7 @@ private fun TransactionCard(transaction: Transaction, onDelete: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(Modifier.weight(1f)) {
                 Text(
                     text = transaction.description.ifEmpty { transaction.category.ifEmpty { transaction.type.name } },
                     style = MaterialTheme.typography.bodyMedium,

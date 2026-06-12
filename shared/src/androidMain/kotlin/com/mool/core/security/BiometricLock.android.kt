@@ -14,8 +14,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
-private const val REQUEST_CODE = 0x1001
-
 @Suppress("DEPRECATION")
 @Composable
 actual fun BiometricLock(

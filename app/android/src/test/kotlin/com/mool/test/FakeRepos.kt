@@ -18,7 +18,7 @@ class FakeExchangeRateRepository : ExchangeRateRepository {
     override fun observeRates(): Flow<List<ExchangeRate>> = _rates
 
     override suspend fun refreshRates() {
-        if (shouldThrow) throw RuntimeException("Refresh failed")
+        if (shouldThrow) error("Refresh failed")
         refreshCalled = true
     }
 
@@ -39,14 +39,14 @@ class FakeTransactionRepository : TransactionRepository {
     override fun observeBalance(): Flow<Double> = _balance
 
     override suspend fun addTransaction(transaction: Transaction) {
-        if (shouldThrow) throw RuntimeException("Add failed")
+        if (shouldThrow) error("Add failed")
         addedTransactions.add(transaction)
         _transactions.value = _transactions.value + transaction
         updateBalance()
     }
 
     override suspend fun deleteTransaction(id: Long) {
-        if (shouldThrow) throw RuntimeException("Delete failed")
+        if (shouldThrow) error("Delete failed")
         deletedIds.add(id)
     }
 
