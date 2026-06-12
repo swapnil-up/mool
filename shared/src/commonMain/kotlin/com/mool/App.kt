@@ -27,10 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mool.core.domain.SettingsKeys
-import com.mool.core.domain.clock.Clock
-import com.mool.core.domain.repository.ExchangeRateRepository
 import com.mool.core.domain.repository.SettingsRepository
-import com.mool.core.domain.repository.TransactionRepository
 import com.mool.core.security.BiometricLock
 import com.mool.core.security.isBiometricAuthenticationAvailable
 import com.mool.core.ui.AddIcon
@@ -69,16 +66,12 @@ fun App() {
 
 @Composable
 private fun AppContent() {
-    val exchangeRateRepo = koinInject<ExchangeRateRepository>()
-    val transactionRepo = koinInject<TransactionRepository>()
+    val dashboardVm = koinInject<DashboardViewModel>()
+    val transactionVm = koinInject<TransactionFormViewModel>()
+    val historyVm = koinInject<TransactionHistoryViewModel>()
+    val remittanceVm = koinInject<RemittanceViewModel>()
+
     val settingsRepo = koinInject<SettingsRepository>()
-    val clock = koinInject<Clock>()
-
-    val dashboardVm = remember { DashboardViewModel(exchangeRateRepo, transactionRepo, settingsRepo) }
-    val transactionVm = remember { TransactionFormViewModel(transactionRepo, clock) }
-    val historyVm = remember { TransactionHistoryViewModel(transactionRepo) }
-    val remittanceVm = remember { RemittanceViewModel(exchangeRateRepo) }
-
     val biometricAvailable = isBiometricAuthenticationAvailable()
     val settingsVm = remember { SettingsViewModel(settingsRepo, biometricAvailable) }
     val settingsState by settingsVm.state.collectAsState()

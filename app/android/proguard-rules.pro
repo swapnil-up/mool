@@ -40,6 +40,10 @@
 -keep class com.mool.core.security.BiometricLock
 -keep class com.mool.core.database.DatabaseDriverFactory
 
+# --- Koin Compiler Plugin annotations ---
+-keep class org.koin.core.annotation.** { *; }
+-keep @org.koin.core.annotation.* class * { *; }
+
 # --- Compose ---
 -keepclassmembers class * {
     @androidx.compose.runtime.Composable <methods>;

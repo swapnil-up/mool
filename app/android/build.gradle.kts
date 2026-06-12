@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.koin.compiler)
 }
 
 kotlin {
@@ -16,6 +17,7 @@ dependencies {
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
     implementation(libs.koin.android)
+    implementation(libs.koin.annotations)
     testImplementation(libs.kotlin.test)
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.4.0")
     testImplementation("junit:junit:4.13.2")
