@@ -2,6 +2,7 @@ package com.mool.feature.settings
 
 import com.mool.core.domain.SettingsKeys
 import com.mool.core.domain.repository.SettingsRepository
+import com.mool.core.ui.ThemeMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,6 +35,7 @@ class SettingsViewModel(
             is SettingsIntent.LoadSettings -> observePreferences()
             is SettingsIntent.SetCurrency -> setCurrency(intent.currency)
             is SettingsIntent.SetBiometricLock -> setBiometricLock(intent.enabled)
+            is SettingsIntent.SetThemeMode -> setThemeMode(intent.mode)
         }
     }
 
@@ -47,6 +49,16 @@ class SettingsViewModel(
         scope.launch {
             settingsRepository.observeSetting(SettingsKeys.BIOMETRIC_ENABLED).collect { value ->
                 _state.update { it.copy(biometricEnabled = value == "true", isBiometricAvailable = isBiometricSupported) }
+            }
+        }
+        scope.launch {
+            settingsRepository.observeSetting(SettingsKeys.THEME_MODE).collect { value ->
+                val mode = when (value) {
+                    "light" -> ThemeMode.LIGHT
+                    "dark" -> ThemeMode.DARK
+                    else -> ThemeMode.FOLLOW_SYSTEM
+                }
+                _state.update { it.copy(themeMode = mode) }
             }
         }
         scope.launch {
@@ -70,6 +82,22 @@ class SettingsViewModel(
                 settingsRepository.setSetting(SettingsKeys.BIOMETRIC_ENABLED, enabled.toString())
             } catch (e: Exception) {
                 _effects.send(SettingsEffect.ShowError(e.message ?: "Failed to update biometric setting"))
+            }
+        }
+    }
+
+    private fun setThemeMode(mode: ThemeMode) {
+        scope.launch {
+            try {
+                val value = when (mode) {
+                    ThemeMode.LIGHT -> "light"
+                    ThemeMode.DARK -> "dark"
+                    ThemeMode.FOLLOW_SYSTEM -> "system"
+                }
+                settingsRepository.setSetting(SettingsKeys.THEME_MODE, value)
+                _state.update { it.copy(themeMode = mode) }
+            } catch (e: Exception) {
+                _effects.send(SettingsEffect.ShowError(e.message ?: "Failed to update theme"))
             }
         }
     }

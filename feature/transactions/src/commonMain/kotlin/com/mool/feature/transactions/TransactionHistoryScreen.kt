@@ -1,12 +1,36 @@
 package com.mool.feature.transactions
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -16,6 +40,9 @@ import androidx.compose.ui.unit.dp
 import com.mool.core.domain.Transaction
 import com.mool.core.domain.TransactionType
 import com.mool.core.ui.ErrorBanner
+import com.mool.core.ui.MoolCard
+import com.mool.core.ui.MoolEmptyState
+import com.mool.core.ui.MoolShimmerCard
 import com.mool.core.ui.toFixed
 import kotlinx.coroutines.flow.collectLatest
 
@@ -41,13 +68,17 @@ fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Transaction History", style = MaterialTheme.typography.headlineSmall)
+            Text(
+                "Transaction History",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
             }
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
         OutlinedTextField(
             value = state.searchQuery,
@@ -59,55 +90,96 @@ fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel) {
                 viewModel.accept(TransactionHistoryIntent.SetSearchQuery(state.searchQuery))
             }),
             modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            ),
         )
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = state.filterType == null,
                 onClick = { viewModel.accept(TransactionHistoryIntent.SetFilterType(null)) },
                 label = { Text("All") },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
             )
             FilterChip(
                 selected = state.filterType == TransactionType.INCOME,
                 onClick = { viewModel.accept(TransactionHistoryIntent.SetFilterType(TransactionType.INCOME)) },
                 label = { Text("Income") },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                ),
             )
             FilterChip(
                 selected = state.filterType == TransactionType.EXPENSE,
                 onClick = { viewModel.accept(TransactionHistoryIntent.SetFilterType(TransactionType.EXPENSE)) },
                 label = { Text("Expense") },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.errorContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onErrorContainer,
+                ),
             )
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
-        ErrorBanner(state.error, modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp))
+        ErrorBanner(state.error, modifier = Modifier.fillMaxWidth())
 
-        if (state.isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+        when {
+            state.isLoading && state.transactions.isEmpty() -> {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Column(Modifier.fillMaxWidth()) {
+                        repeat(5) { MoolShimmerCard(Modifier.padding(vertical = 4.dp)) }
+                    }
+                }
             }
-        } else if (state.transactions.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            state.transactions.isEmpty() -> {
                 val msg = if (state.searchQuery.isNotEmpty() || state.filterType != null)
                     "No matching transactions"
                 else
                     "No transactions yet"
-                Text(
-                    msg,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        } else {
-            LazyColumn {
-                items(state.transactions, key = { it.id }) { tx ->
-                    TransactionCard(
-                        transaction = tx,
-                        onDelete = { viewModel.accept(TransactionHistoryIntent.DeleteTransaction(tx.id)) },
+                val subtitle = if (state.searchQuery.isNotEmpty() || state.filterType != null)
+                    "Try a different search or filter"
+                else
+                    "Add your first transaction to get started"
+                Box(modifier = Modifier.fillMaxSize()) {
+                    MoolEmptyState(
+                        title = msg,
+                        subtitle = subtitle,
+                        action = if (state.searchQuery.isEmpty() && state.filterType == null) null
+                        else {
+                            {
+                                Button(
+                                    onClick = {
+                                        viewModel.accept(TransactionHistoryIntent.SetSearchQuery(""))
+                                        viewModel.accept(TransactionHistoryIntent.SetFilterType(null))
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                ) { Text("Clear filters") }
+                            }
+                        },
                     )
+                }
+            }
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    items(state.transactions, key = { it.id }) { tx ->
+                        TransactionCard(
+                            transaction = tx,
+                            onDelete = { viewModel.accept(TransactionHistoryIntent.DeleteTransaction(tx.id)) },
+                        )
+                    }
                 }
             }
         }
@@ -119,13 +191,15 @@ private fun TransactionCard(transaction: Transaction, onDelete: () -> Unit) {
     val isIncome = transaction.type == TransactionType.INCOME
     val amountColor = if (isIncome) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
     val prefix = if (isIncome) "+" else "-"
+    val bgColor = if (isIncome) MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
+        else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
 
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    MoolCard(
+        modifier = Modifier.fillMaxWidth().animateContentSize(),
+        colors = CardDefaults.cardColors(containerColor = bgColor),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -136,6 +210,7 @@ private fun TransactionCard(transaction: Transaction, onDelete: () -> Unit) {
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(Modifier.height(2.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -155,17 +230,24 @@ private fun TransactionCard(transaction: Transaction, onDelete: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "$prefix${transaction.amount.toFixed(2)}",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = amountColor,
                 )
-                Spacer(Modifier.width(8.dp))
-                IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                    Text("X", style = MaterialTheme.typography.labelSmall)
+                Spacer(Modifier.width(4.dp))
+                IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                    Box(
+                        modifier = Modifier.size(24.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            "✕",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }
     }
 }
-
-
