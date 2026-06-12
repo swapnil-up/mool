@@ -16,6 +16,11 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
+      - name: Build Koin Compiler Plugin (remove once 1.0.1+ is on Maven Central)
+        run: |
+          git clone --depth 1 https://github.com/InsertKoinIO/koin-compiler-plugin.git /tmp/koin-compiler-plugin
+          cd /tmp/koin-compiler-plugin
+          ./gradlew publishToMavenLocal -x test --no-daemon
       - run: ./gradlew allTests --no-daemon
 
   build-android:
@@ -27,4 +32,9 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
+      - name: Build Koin Compiler Plugin (remove once 1.0.1+ is on Maven Central)
+        run: |
+          git clone --depth 1 https://github.com/InsertKoinIO/koin-compiler-plugin.git /tmp/koin-compiler-plugin
+          cd /tmp/koin-compiler-plugin
+          ./gradlew publishToMavenLocal -x test --no-daemon
       - run: ./gradlew :app:android:assembleDebug --no-daemon

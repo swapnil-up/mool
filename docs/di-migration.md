@@ -23,7 +23,7 @@ ClassCastException: FirExtensionRegistrarAdapter$Companion cannot be cast to Pro
 
 Issue [#19](https://github.com/InsertKoinIO/koin-compiler-plugin/issues/19) was fixed on `main` (commit `0b25301`) with a version-adapter layer supporting both Kotlin 2.3.20 and 2.4.0, but **v1.0.1 has not been published to Maven Central yet**.
 
-**Workaround:** The plugin was built from source and published to `~/.m2/repository`. The project uses `mavenLocal()` in both `pluginManagement` and `dependencyResolutionManagement` in `settings.gradle.kts`. This is temporary — swap back to Maven Central version once 1.0.1 drops.
+**Workaround:** The plugin was built from source and published to `~/.m2/repository`. The project uses `mavenLocal()` in both `pluginManagement` and `dependencyResolutionManagement` in `settings.gradle.kts`. The CI workflow (`.github/workflows/ci.yml`) also builds the plugin from source before the app build. This is temporary — swap back to Maven Central version once 1.0.1 drops.
 
 ### 2. Compile-time safety flagged platform-specific dependency
 
